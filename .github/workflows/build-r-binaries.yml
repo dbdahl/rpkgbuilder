@@ -1,0 +1,81 @@
+name: Build R Binaries
+
+on:
+  push:
+    paths:
+      - "src/contrib/*.tar.gz"  # Trigger when an R source package is added/updated
+    branches:
+      - main  # Adjust if using a different default branch
+
+jobs:
+  build:
+    name: Build R Binaries
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true  # Required for pushing changes
+
+      - name: Set Up R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.4.0'  # Set R version to 4.4
+
+      - name: Install Dependencies
+        run: |
+          install.packages(c("devtools", "remotes", "drat"))
+        shell: Rscript {0}
+
+      - name: Find the Latest Source Package
+        id: find_source
+        run: |
+          SRC_PACKAGE=$(ls -t src/contrib/*.tar.gz | head -n1)
+          echo "SRC_PACKAGE=$SRC_PACKAGE" >> $GITHUB_ENV
+
+      - name: Build Windows Binary (if on Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          R CMD INSTALL --build ${{ env.SRC_PACKAGE }}
+        shell: cmd
+
+      - name: Build macOS Binary (if on macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          R CMD INSTALL --build ${{ env.SRC_PACKAGE }}
+        shell: bash
+
+      - name: Move Windows Binary to Repository (if on Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          mkdir -p bin/windows/contrib/4.4
+          mv *.zip bin/windows/contrib/4.4/
+        shell: bash
+
+      - name: Move macOS Binary to Repository (if on macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          mkdir -p bin/macosx/contrib/4.4
+          mv *.tgz bin/macosx/contrib/4.4/
+        shell: bash
+
+      - name: Update PACKAGES Metadata
+        run: |
+          Rscript -e "tools::write_PACKAGES('src/contrib', type='source')"
+          Rscript -e "tools::write_PACKAGES('bin/windows/contrib/4.4', type='win.binary')"
+          Rscript -e "tools::write_PACKAGES('bin/macosx/contrib/4.4', type='mac.binary')"
+        shell: bash
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Add R package binaries for ${{ env.SRC_PACKAGE }}" || echo "No changes to commit"
+          git push
+        shell: bash
+
