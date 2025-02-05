@@ -1,0 +1,5 @@
+Package: roxidoExample
+Version: 0.1.0
+Depends: R (>= 4.2.0)
+License: MIT + file LICENSE | Apache License 2.0
+MD5sum: 11c519af08d081056a0b266b498ddbc9
