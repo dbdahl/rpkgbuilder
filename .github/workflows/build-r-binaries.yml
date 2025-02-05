@@ -16,7 +16,7 @@ jobs:
         os: [macos-latest, windows-latest]
     outputs:
       macos_artifact: ${{ steps.upload_macos.outputs.artifact_name }}
-      windows_artifact: ${{ steps.upload_windows.outputs.artifact_name }}
+      # windows_artifact: ${{ steps.upload_windows.outputs.artifact_name }}
 
     steps:
       - name: Checkout Repository
@@ -83,11 +83,17 @@ jobs:
           name: windows-binary
           path: bin/windows/contrib/4.4/
 
+      - name: Set Up R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.4.0'
+
       - name: Update PACKAGES Metadata
         run: |
           Rscript -e "tools::write_PACKAGES('src/contrib', type='source')"
           Rscript -e "tools::write_PACKAGES('bin/windows/contrib/4.4', type='win.binary')"
           Rscript -e "tools::write_PACKAGES('bin/macosx/contrib/4.4', type='mac.binary')"
+        shell: bash
 
       - name: Commit and Push Changes
         run: |
@@ -96,3 +102,4 @@ jobs:
           git add .
           git commit -m "Add R package binaries for ${{ env.SRC_PACKAGE }}" || echo "No changes to commit"
           git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+        shell: bash
