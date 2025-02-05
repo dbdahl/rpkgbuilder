@@ -34,8 +34,10 @@ jobs:
       - name: Find the Latest Source Package
         id: find_source
         run: |
-          SRC_PACKAGE=$(ls -t src/contrib/*.tar.gz | head -n1)
-          echo "SRC_PACKAGE=$SRC_PACKAGE" >> $GITHUB_ENV
+          latest_pkg <- list.files("src/contrib", pattern = "\\.tar\\.gz$", full.names = TRUE)
+          latest_pkg <- latest_pkg[order(file.info(latest_pkg)$mtime, decreasing = TRUE)][1]
+          cat(sprintf("SRC_PACKAGE=%s\n", latest_pkg), file = Sys.getenv("GITHUB_ENV"), append = TRUE)
+        shell: Rscript {0}
 
       - name: Build Windows Binary (if on Windows)
         if: matrix.os == 'windows-latest'
