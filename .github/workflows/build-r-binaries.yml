@@ -40,24 +40,10 @@ jobs:
           cat(sprintf("SRC_PACKAGE=%s\n", latest_pkg), file = Sys.getenv("GITHUB_ENV"), append = TRUE)
         shell: Rscript {0}
 
-      - name: Build macOS Binary (if on macOS)
-        if: matrix.os == 'macos-latest'
+      - name: Build Binary
         run: |
           R CMD INSTALL --build "${{ env.SRC_PACKAGE }}"
         shell: bash
-
-      - name: Install RTools (Windows Only)
-        if: matrix.os == 'windows-latest'
-        run: |
-          choco install rtools --version=4.4.6335  # Adjust version if needed
-          echo "C:\\rtools40\\usr\\bin" >> $GITHUB_PATH
-        shell: powershell
-
-      - name: Build Windows Binary (if on Windows)
-        if: matrix.os == 'windows-latest'
-        run: |
-          options(noninteractive = TRUE); devtools::build(pkg = "${{ env.SRC_PACKAGE }}", binary = TRUE)
-        shell: Rscript {0}
 
       - name: Upload macOS Binary
         if: matrix.os == 'macos-latest'
