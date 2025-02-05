@@ -29,7 +29,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          install.packages(c())
+          install.packages(c("devtools"))
         shell: Rscript {0}
 
       - name: Find the Latest Source Package
@@ -40,10 +40,17 @@ jobs:
           cat(sprintf("SRC_PACKAGE=%s\n", latest_pkg), file = Sys.getenv("GITHUB_ENV"), append = TRUE)
         shell: Rscript {0}
 
-      - name: Build Binary
+      - name: Build macOS Binary (if on macOS)
+        if: matrix.os == 'macos-latest'
         run: |
           R CMD INSTALL --build "${{ env.SRC_PACKAGE }}"
         shell: bash
+
+      - name: Build Windows Binary (if on Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          options(noninteractive = TRUE); devtools::build(pkg = "${{ env.SRC_PACKAGE }}", binary = TRUE)
+        shell: Rscript {0}
 
       - name: Upload macOS Binary
         if: matrix.os == 'macos-latest'
