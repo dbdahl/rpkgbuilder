@@ -63,12 +63,3 @@ jobs:
           path: "*.zip"
           retention-days: 1
 
-  print_urls:
-    name: Print Artifact URLs
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Print Artifact Download URL
-        run: |
-          echo "Download binaries from: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts"
-        shell: bash

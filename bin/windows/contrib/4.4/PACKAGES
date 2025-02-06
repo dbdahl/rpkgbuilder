@@ -1,5 +1,0 @@
-Package: roxidoExample
-Version: 0.1.0
-Depends: R (>= 4.2.0)
-License: MIT + file LICENSE | Apache License 2.0
-Archs: x64
