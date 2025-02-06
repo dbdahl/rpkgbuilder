@@ -1,9 +1,10 @@
 # CRAN-Style Repository for R Package
 
-#### By David B. Dahl (Brigham Young University)
+#### By David B. Dahl
 
-This is a CRAN-style repository for R packages by [David B. Dahl](https://
-dahl.byu.edu) and collaborators.
+This is a CRAN-style repository for R packages by
+[David B. Dahl](https://dahl.byu.edu)
+([Brigham Young University](https://www.byu.edu)) and collaborators.
 
 This often contains development versions of packages that are not yet widely
 distributed on, say, [CRAN](https://cran.r-project.org).
@@ -14,7 +15,7 @@ To install the latest version of a particular package 'salso', run the following
 in R:
 
 ```R
-install.packages("salso", repos="https://dahl.byu.edu/rpkgbuilder")
+install.packages("salso", repos="https://dahl.byu.edu/r")
 ```
 
 ## Check Package Version
@@ -39,7 +40,7 @@ file.edit("~/.Rprofile")
 Add the following line to your `.Rprofile` file:
 
 ```R
-options(repos=c(dahl="https://dahl.byu.edu/rpkgbuilder",
+options(repos=c(dahl="https://dahl.byu.edu/r",
                 CRAN="https://cloud.r-project.org"))
 ```
 

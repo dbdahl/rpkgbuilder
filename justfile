@@ -1,5 +1,15 @@
+help:
+  #!/usr/bin/env sh
+  echo "Workflow:"
+  echo "  1. Run the command: just insert SRC_PACKAGE_FILENAME"
+  echo "  2. Commit a source package to the src/contrib folder."
+  echo "  3. Download the Windows and macOS assets from https://github.com/dbdahl/rpkgbuilder/actions"
+  echo "  4. Unzip the downloads to exposure the binary R packages."
+  echo "  5. For each binary R package, run the command: just insert BIN_PACKAGE_FILENAME"
+  echo "  6. To deploy to https://dahl.byu.edu/r, run the command: just deploy"
+
 render:
-  marky README.md
+  marky --theme sakura-dark README.md
   mv README.html index.html
 
 insert pkg_filename:
