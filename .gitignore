@@ -2,3 +2,7 @@ PACKAGES
 PACKAGES.gz
 PACKAGES.rds
 /bin
+/index.html
+/*.tar.gz
+/*.tgz
+/*.zip
