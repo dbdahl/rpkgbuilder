@@ -2,5 +2,4 @@ Package: roxidoExample
 Version: 0.1.0
 Depends: R (>= 4.2.0)
 License: MIT + file LICENSE | Apache License 2.0
-MD5sum: 2bd31329927e4811672f391ccae3bda1
-NeedsCompilation: yes
+Archs: x64
