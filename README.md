@@ -14,7 +14,7 @@ To install the latest version of a particular package 'salso', run the following
 in R:
 
 ```R
-install.packages("salso", repos="https://dahl.byu.edu/rrepository")
+install.packages("salso", repos="https://dahl.byu.edu/rpkgbuilder")
 ```
 
 ## Check Package Version
@@ -39,7 +39,7 @@ file.edit("~/.Rprofile")
 Add the following line to your `.Rprofile` file:
 
 ```R
-options(repos=c(dahl="https://dahl.byu.edu/rrepository",
+options(repos=c(dahl="https://dahl.byu.edu/rpkgbuilder",
                 CRAN="https://cloud.r-project.org"))
 ```
 
