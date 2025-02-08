@@ -1,6 +1,7 @@
 PACKAGES
 PACKAGES.gz
 PACKAGES.rds
+/src
 /bin
 /index.html
 /*.tar.gz
