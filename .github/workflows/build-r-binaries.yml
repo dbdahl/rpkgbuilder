@@ -1,52 +1,63 @@
-name: Build R Binaries
+name: Build Binary R Package
 
 on:
-  push:
-    paths:
-      - "src/contrib/*.tar.gz"
-    branches:
-      - main
+  workflow_dispatch:
+    inputs:
+      package_name:
+        description: "Name of the R package"
+        required: true
+        type: string
+      os:
+        description: "Target OS for binary package"
+        required: true
+        type: choice
+        options:
+          - Windows
+          - macOS
+      dependencies:
+        description: "Comma-separated list of dependencies (optional)"
+        required: false
+        type: string
 
 jobs:
-  build:
-    name: Build R Binaries
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [macos-latest, windows-latest]
-    outputs:
-      macos_artifact: ${{ steps.upload_macos.outputs.artifact_name }}
-      windows_artifact: ${{ steps.upload_windows.outputs.artifact_name }}
+  build-r-package:
+    runs-on: ${{ inputs.os == 'Windows' && 'windows-latest' || 'macos-latest' }}
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      - name: Set up environment
+        run: |
+          echo "PACKAGE_NAME=${{ inputs.package_name }}" >> $GITHUB_ENV
+          echo "OS=${{ inputs.os }}" >> $GITHUB_ENV
+          echo "DEPENDENCIES=${{ inputs.dependencies }}" >> $GITHUB_ENV
 
-      - name: Set Up R
+      - name: Construct Source Package URL
+        run: |
+          echo "PACKAGE_URL=https://dahl.byu.edu/r/src/contrib/${PACKAGE_NAME}.tar.gz" >> $GITHUB_ENV
+
+      - name: Download Source Package
+        run: |
+          curl -o ${PACKAGE_NAME}.tar.gz ${PACKAGE_URL}
+        shell: bash
+
+      - name: Set Up R Environment
         uses: r-lib/actions/setup-r@v2
-        with:
-          r-version: '4.4.2'
 
       - name: Install Dependencies
+        if: env.DEPENDENCIES != ''
         run: |
-          install.packages(c("mclust"))
-        shell: Rscript {0}
+          Rscript -e '
+            repos <- c("https://dahl.byu.edu/r", "https://cloud.r-project.org");
+            deps <- unlist(strsplit(gsub(" ", "", Sys.getenv("DEPENDENCIES")), ",")); 
+            install.packages(deps, repos = repos, dependencies = TRUE)'
+        shell: bash
 
-      - name: Find the Latest Source Package
-        id: find_source
+      - name: Build Binary Package
         run: |
-          latest_pkg <- list.files("src/contrib", pattern = "\\.tar\\.gz$", full.names = TRUE)
-          latest_pkg <- latest_pkg[order(file.info(latest_pkg)$mtime, decreasing = TRUE)][1]
-          cat(sprintf("SRC_PACKAGE=%s\n", latest_pkg), file = Sys.getenv("GITHUB_ENV"), append = TRUE)
-        shell: Rscript {0}
-
-      - name: Build Binary
-        run: |
-          R CMD INSTALL --build "${{ env.SRC_PACKAGE }}"
+          R CMD build --binary ${PACKAGE_NAME}.tar.gz
         shell: bash
 
       - name: Upload macOS Binary
-        if: matrix.os == 'macos-latest'
+        if: inputs.os == 'macOS'
         id: upload_macos
         uses: actions/upload-artifact@v4
         with:
@@ -55,7 +66,7 @@ jobs:
           retention-days: 1
 
       - name: Upload Windows Binary
-        if: matrix.os == 'windows-latest'
+        if: inputs.os == 'Windows'
         id: upload_windows
         uses: actions/upload-artifact@v4
         with:
