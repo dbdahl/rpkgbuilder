@@ -12,7 +12,7 @@ on:
         required: true
         type: choice
         options:
-          - Windows
+          - windows
           - macOS
       dependencies:
         description: "Comma-separated list of dependencies (optional)"
@@ -21,7 +21,7 @@ on:
 
 jobs:
   build-r-package:
-    runs-on: ${{ inputs.os == 'Windows' && 'windows-latest' || 'macos-latest' }}
+    runs-on: ${{ inputs.os == 'windows' && 'windows-latest' || 'macos-latest' }}
     outputs:
       artifact: ${{ steps.upload.outputs.artifact_name }}
 
@@ -55,7 +55,7 @@ jobs:
 
       - name: Build Binary Package
         run: |
-          R CMD INSTALL --binary ${PACKAGE_NAME}.tar.gz
+          R CMD INSTALL --build ${PACKAGE_NAME}.tar.gz
         shell: bash
 
       - name: Upload Binary R Package
@@ -64,7 +64,8 @@ jobs:
         with:
           name: artifact
           path: |
-            *.tgz
-            *.zip"
+            ${{ env.PACKAGE_NAME }}*.tar.gz
+            ${{ env.PACKAGE_NAME }}*.tgz
+            ${{ env.PACKAGE_NAME }}*.zip
           retention-days: 1
 
