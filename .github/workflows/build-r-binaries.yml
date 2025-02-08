@@ -53,7 +53,7 @@ jobs:
 
       - name: Build Binary Package
         run: |
-          R CMD build --binary ${PACKAGE_NAME}.tar.gz
+          R CMD INSTALL --binary ${PACKAGE_NAME}.tar.gz
         shell: bash
 
       - name: Upload macOS Binary
