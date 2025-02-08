@@ -26,25 +26,30 @@ jobs:
       artifact: ${{ steps.upload.outputs.artifact_name }}
 
     steps:
-      - name: Set up environment
+      - name: Set up environment (Linux/macOS)
+        if: runner.os != 'Windows'
         run: |
           echo "PACKAGE_NAME=${{ inputs.package_name }}" >> $GITHUB_ENV
-          echo "OS=${{ inputs.os }}" >> $GITHUB_ENV
+          echo "PACKAGE_URL=https://dahl.byu.edu/r/src/contrib/${{ inputs.package_name }}.tar.gz" >> $GITHUB_ENV
           echo "DEPENDENCIES=${{ inputs.dependencies }}" >> $GITHUB_ENV
 
-      - name: Construct Source Package URL
+      - name: Set up environment (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
         run: |
-          echo "PACKAGE_URL=https://dahl.byu.edu/r/src/contrib/${PACKAGE_NAME}.tar.gz" >> $GITHUB_ENV
+          echo "PACKAGE_NAME=${{ inputs.package_name }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "PACKAGE_URL=https://dahl.byu.edu/r/src/contrib/${{ inputs.package_name }}.tar.gz" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "DEPENDENCIES=${{ inputs.dependencies }}" | Out-File -FilePath $env:GITHUB_ENV -Append
 
       - name: Debug Variables
         run: |
-          echo "PACKAGE_NAME: $(echo $PACKAGE_NAME)"
-          echo "PACKAGE_URL: $(echo $PACKAGE_URL)"
+          echo "PACKAGE_NAME: $PACKAGE_NAME"
+          echo "PACKAGE_URL: $PACKAGE_URL"
         shell: bash
 
       - name: Download Source Package
         run: |
-          curl -o "$(echo $PACKAGE_NAME).tar.gz" "$(echo $PACKAGE_URL)"
+          curl -o "${PACKAGE_NAME}.tar.gz" "${PACKAGE_URL}"
         shell: bash
 
       - name: Set Up R Environment
