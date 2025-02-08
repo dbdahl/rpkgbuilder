@@ -64,7 +64,6 @@ jobs:
         with:
           name: artifact
           path: |
-            ${{ env.PACKAGE_NAME }}*.tar.gz
             ${{ env.PACKAGE_NAME }}*.tgz
             ${{ env.PACKAGE_NAME }}*.zip
           retention-days: 1
