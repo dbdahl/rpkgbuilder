@@ -36,9 +36,15 @@ jobs:
         run: |
           echo "PACKAGE_URL=https://dahl.byu.edu/r/src/contrib/${PACKAGE_NAME}.tar.gz" >> $GITHUB_ENV
 
+      - name: Debug Variables
+        run: |
+          echo "PACKAGE_NAME: $PACKAGE_NAME"
+          echo "PACKAGE_URL: $PACKAGE_URL"
+        shell: bash
+
       - name: Download Source Package
         run: |
-          curl -o ${PACKAGE_NAME}.tar.gz ${PACKAGE_URL}
+          curl -o "${PACKAGE_NAME}.tar.gz" "${PACKAGE_URL}"
         shell: bash
 
       - name: Set Up R Environment
