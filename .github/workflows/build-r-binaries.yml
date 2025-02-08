@@ -22,6 +22,8 @@ on:
 jobs:
   build-r-package:
     runs-on: ${{ inputs.os == 'Windows' && 'windows-latest' || 'macos-latest' }}
+    outputs:
+      artifact: ${{ steps.upload.outputs.artifact_name }}
 
     steps:
       - name: Set up environment
@@ -56,21 +58,13 @@ jobs:
           R CMD INSTALL --binary ${PACKAGE_NAME}.tar.gz
         shell: bash
 
-      - name: Upload macOS Binary
-        if: inputs.os == 'macOS'
-        id: upload_macos
+      - name: Upload Binary R Package
+        id: upload
         uses: actions/upload-artifact@v4
         with:
-          name: macos-binary
-          path: "*.tgz"
-          retention-days: 1
-
-      - name: Upload Windows Binary
-        if: inputs.os == 'Windows'
-        id: upload_windows
-        uses: actions/upload-artifact@v4
-        with:
-          name: windows-binary
-          path: "*.zip"
+          name: artifact
+          path: |
+            *.tgz
+            *.zip"
           retention-days: 1
 
