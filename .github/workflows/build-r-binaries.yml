@@ -26,6 +26,9 @@ jobs:
       artifact: ${{ steps.upload.outputs.artifact_name }}
 
     steps:
+      - name: Install Rust toolchain
+        run: rustup target add x86_64-pc-windows-gnu
+
       - name: Set up environment
         shell: bash
         run: |
