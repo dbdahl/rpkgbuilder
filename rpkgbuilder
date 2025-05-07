@@ -1,0 +1,17 @@
+#!/usr/bin/fish
+
+if test (count $argv) -ne 1
+    echo "usage: "(basename (status --current-filename))" R_PACKAGE" >&2
+    exit 1
+end
+
+set pkg_filename (realpath $argv[1])
+
+cd (dirname (realpath (status --current-filename)))
+
+marky --theme sakura-dark README.md
+mv README.html index.html
+
+Rscript -e 'drat::insertPackage("'$pkg_filename'", repodir=".", action="archive")'
+
+rsync -av --delete index.html src bin dahl.byu.edu:docs/devel/website-professional/html/rpkgbuilder/
