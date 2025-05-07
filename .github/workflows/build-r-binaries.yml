@@ -29,8 +29,7 @@ jobs:
       - name: Install Rust toolchain
         run: |
           rustup target add x86_64-pc-windows-gnu
-        env:
-          CARGO_BUILD_TARGET: ${{ inputs.os == 'windows' && 'x86_64-pc-windows-gnu' || '' }}
+          rustup set default-host x86_64-pc-windows-gnu
 
       - name: Set up environment
         shell: bash
