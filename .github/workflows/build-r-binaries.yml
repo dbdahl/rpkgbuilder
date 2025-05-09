@@ -43,11 +43,12 @@ jobs:
         run: |
           echo "PACKAGE_NAME: $PACKAGE_NAME"
           echo "PACKAGE_URL: $PACKAGE_URL"
+          echo "DEPENDENCIES: $DEPENDENCIES"
 
       - name: Download Source Package
+        shell: bash
         run: |
           curl -o "${PACKAGE_NAME}.tar.gz" "${PACKAGE_URL}"
-        shell: bash
 
       - name: Set Up R Environment
         uses: r-lib/actions/setup-r@v2
@@ -61,19 +62,10 @@ jobs:
             Rscript -e "install.packages('$pkg', repos = c('https://dahl.byu.edu/r', 'https://cloud.r-project.org'))"
           done
 
-      # - name: Install Dependencies
-      #   if: env.DEPENDENCIES != ''
-      #   run: |
-      #     Rscript -e '
-      #       repos <- c("https://dahl.byu.edu/r", "https://cloud.r-project.org");
-      #       deps <- unlist(strsplit(gsub(" ", "", Sys.getenv("DEPENDENCIES")), ",")); 
-      #       install.packages(deps, repos = repos, dependencies = TRUE)'
-      #   shell: bash
-
       - name: Build Binary Package
+        shell: bash
         run: |
           R CMD INSTALL --build ${PACKAGE_NAME}.tar.gz
-        shell: bash
 
       - name: Upload Binary R Package
         id: upload
