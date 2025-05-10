@@ -26,10 +26,14 @@ jobs:
       artifact: ${{ steps.upload.outputs.artifact_name }}
 
     steps:
-      - name: Install Rust toolchain
+      - name: Install Rust GNU Toolchain (Windows only)
+        if: runner.os == 'Windows'
+        shell: bash
         run: |
+          rustup toolchain install stable-x86_64-pc-windows-gnu
+          rustup default stable-x86_64-pc-windows-gnu
           rustup target add x86_64-pc-windows-gnu
-          rustup set default-host x86_64-pc-windows-gnu
+          echo "CARGO_BUILD_TARGET=x86_64-pc-windows-gnu" >> $GITHUB_ENV
 
       - name: Set up environment
         shell: bash
@@ -44,6 +48,7 @@ jobs:
           echo "PACKAGE_NAME: $PACKAGE_NAME"
           echo "PACKAGE_URL: $PACKAGE_URL"
           echo "DEPENDENCIES: $DEPENDENCIES"
+          echo "CARGO_BUILD_TARGET: $CARGO_BUILD_TARGET"
 
       - name: Download Source Package
         shell: bash
