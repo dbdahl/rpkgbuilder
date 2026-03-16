@@ -21,8 +21,6 @@ on:
 jobs:
   build-r-package:
     runs-on: ${{ inputs.os == 'windows' && 'windows-latest' || 'macos-latest' }}
-    outputs:
-      artifact: ${{ steps.upload.outputs.artifact_name }}
 
     steps:
       - name: Install Rust GNU Toolchain (Windows only)
@@ -101,12 +99,22 @@ jobs:
         run: |
           R CMD INSTALL --build ${SOURCE_BASENAME}.tar.gz
 
+      - name: Locate Built Binary
+        shell: bash
+        run: |
+          shopt -s nullglob
+          files=( "${SOURCE_BASENAME}"*.tgz "${SOURCE_BASENAME}"*.zip )
+          if [ "${#files[@]}" -ne 1 ]; then
+            echo "Expected exactly one built binary artifact, found ${#files[@]}." >&2
+            printf '%s\n' "${files[@]}" >&2
+            exit 1
+          fi
+          echo "BINARY_FILE=${files[0]}" >> $GITHUB_ENV
+
       - name: Upload Binary R Package
         id: upload
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
-          name: ${{ env.SOURCE_BASENAME }}-${{ inputs.os }}-binary
-          path: |
-            ${{ env.SOURCE_BASENAME }}*.tgz
-            ${{ env.SOURCE_BASENAME }}*.zip
+          path: ${{ env.BINARY_FILE }}
+          archive: false
           retention-days: 1
