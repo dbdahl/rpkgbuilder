@@ -1,17 +1,67 @@
 #!/usr/bin/fish
 
-if test (count $argv) -ne 1
-    echo "usage: "(basename (status --current-filename))" R_PACKAGE" >&2
+set script_name (basename (status --current-filename))
+
+if test (count $argv) -lt 1 -o (count $argv) -gt 2
+    echo "usage: $script_name R_PACKAGE [none|windows|macOS|both]" >&2
     exit 1
 end
 
 set pkg_filename (realpath $argv[1])
+set target none
 
-cd (dirname (realpath (status --current-filename)))
+if test (count $argv) -eq 2
+    set target $argv[2]
+end
 
-marky --theme sakura-dark README.md
-mv README.html index.html
+switch $target
+    case none windows both
+    case macOS macos
+        set target macOS
+    case '*'
+        echo "invalid target '$target' (expected none, windows, macOS, or both)" >&2
+        exit 1
+end
 
-Rscript -e 'drat::insertPackage("'$pkg_filename'", repodir=".", action="archive")'
+set pkg_basename (basename $pkg_filename)
+if not string match -rq '\.tar\.gz$' -- $pkg_basename
+    echo "expected an R source tarball ending in .tar.gz: $pkg_basename" >&2
+    exit 1
+end
+set source_basename (string replace -r '\.tar\.gz$' '' -- $pkg_basename)
 
-rsync -av --delete index.html src bin dahl.byu.edu:docs/devel/website-professional/html/rpkgbuilder/
+cd (dirname (realpath (status --current-filename))); or exit $status
+
+marky --theme sakura-dark README.md; or exit $status
+mv README.html index.html; or exit $status
+
+Rscript -e 'drat::insertPackage("'$pkg_filename'", repodir=".", action="archive")'; or exit $status
+
+rsync -av --delete index.html src bin dahl.byu.edu:docs/devel/website-professional/html/rpkgbuilder/; or exit $status
+
+if test $target = none
+    exit 0
+end
+
+type -q gh
+or begin
+    echo "gh is required to dispatch GitHub Actions workflows" >&2
+    exit 1
+end
+
+function dispatch_build --argument-names os_name source_name
+    echo "dispatching GitHub Actions build for $source_name on $os_name"
+    gh workflow run build-r-binaries.yml \
+        --repo dbdahl/rpkgbuilder \
+        --ref main \
+        -f source_basename="$source_name" \
+        -f os="$os_name"
+end
+
+switch $target
+    case windows macOS
+        dispatch_build $target $source_basename; or exit $status
+    case both
+        dispatch_build windows $source_basename; or exit $status
+        dispatch_build macOS $source_basename; or exit $status
+end
