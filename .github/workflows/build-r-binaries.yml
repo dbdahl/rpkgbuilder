@@ -1,5 +1,8 @@
 name: Build Binary R Package
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 on:
   workflow_dispatch:
     inputs:
@@ -74,11 +77,10 @@ jobs:
 
       - name: Upload Binary R Package
         id: upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: artifact
           path: |
             ${{ env.PACKAGE_NAME }}*.tgz
             ${{ env.PACKAGE_NAME }}*.zip
           retention-days: 1
-
