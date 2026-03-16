@@ -82,16 +82,9 @@ jobs:
               message("No package dependencies to install.")
               quit(save = "no")
             }
-            available <- available.packages(repos = repos)
-            recursive <- tools::package_dependencies(
-              direct,
-              db = available,
-              which = c("Depends", "Imports", "LinkingTo"),
-              recursive = TRUE
-            )
-            to_install <- sort(unique(c(direct, unlist(recursive, use.names = FALSE))))
-            message("Installing dependencies: ", paste(to_install, collapse = ", "))
-            install.packages(to_install, repos = repos, dependencies = FALSE)
+            message("Installing direct dependencies with recursive strong deps: ",
+                    paste(sort(direct), collapse = ", "))
+            install.packages(direct, repos = repos, dependencies = NA)
           '
 
       - name: Build Binary Package
