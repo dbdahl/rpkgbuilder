@@ -6,8 +6,8 @@ env:
 on:
   workflow_dispatch:
     inputs:
-      package_name:
-        description: "Name of the R package"
+      source_basename:
+        description: "Source tarball basename, e.g. salso_0.3.72"
         required: true
         type: string
       os:
@@ -17,10 +17,6 @@ on:
         options:
           - windows
           - macOS
-      dependencies:
-        description: "Comma-separated list of dependencies (optional)"
-        required: false
-        type: string
 
 jobs:
   build-r-package:
@@ -41,46 +37,76 @@ jobs:
       - name: Set up environment
         shell: bash
         run: |
-          echo "PACKAGE_NAME=${{ inputs.package_name }}" >> $GITHUB_ENV
-          echo "PACKAGE_URL=https://dahl.byu.edu/r/src/contrib/${{ inputs.package_name }}.tar.gz" >> $GITHUB_ENV
-          echo "DEPENDENCIES=${{ inputs.dependencies }}" >> $GITHUB_ENV
+          echo "SOURCE_BASENAME=${{ inputs.source_basename }}" >> $GITHUB_ENV
+          echo "PACKAGE_URL=https://dahl.byu.edu/r/src/contrib/${{ inputs.source_basename }}.tar.gz" >> $GITHUB_ENV
 
       - name: Debug Variables
         shell: bash
         run: |
-          echo "PACKAGE_NAME: $PACKAGE_NAME"
+          echo "SOURCE_BASENAME: $SOURCE_BASENAME"
           echo "PACKAGE_URL: $PACKAGE_URL"
-          echo "DEPENDENCIES: $DEPENDENCIES"
           echo "CARGO_BUILD_TARGET: $CARGO_BUILD_TARGET"
 
       - name: Download Source Package
         shell: bash
         run: |
-          curl -o "${PACKAGE_NAME}.tar.gz" "${PACKAGE_URL}"
+          curl -fL --retry 3 --retry-all-errors -o "${SOURCE_BASENAME}.tar.gz" "${PACKAGE_URL}"
 
       - name: Set Up R Environment
         uses: r-lib/actions/setup-r@v2
 
-      - name: Install Dependencies
+      - name: Install Dependencies from DESCRIPTION
         shell: bash
         run: |
-          deps=$(echo "${DEPENDENCIES}" | tr ',' ' ')
-          for pkg in $deps
-          do
-            Rscript -e "install.packages('$pkg', repos = c('https://dahl.byu.edu/r', 'https://cloud.r-project.org'))"
-          done
+          Rscript -e '
+            repos <- c(
+              dahl = "https://dahl.byu.edu/r",
+              dbdahl = "https://dbdahl.r-universe.dev",
+              CRAN = "https://cloud.r-project.org"
+            )
+            source_tarball <- paste0(Sys.getenv("SOURCE_BASENAME"), ".tar.gz")
+            unpack_dir <- tempfile("pkgsrc-")
+            dir.create(unpack_dir)
+            utils::untar(source_tarball, exdir = unpack_dir)
+            pkg_dirs <- list.dirs(unpack_dir, full.names = TRUE, recursive = FALSE)
+            stopifnot(length(pkg_dirs) == 1)
+            desc <- read.dcf(file.path(pkg_dirs, "DESCRIPTION"))
+            dep_fields <- intersect(c("Depends", "Imports", "LinkingTo"), colnames(desc))
+            base_pkgs <- rownames(installed.packages(priority = c("base", "recommended")))
+            parse_deps <- function(fields) {
+              if (!length(fields)) return(character())
+              x <- trimws(unlist(strsplit(paste(fields, collapse = ","), ",")))
+              x <- sub("\\s*\\(.*\\)$", "", x)
+              unique(setdiff(x[nzchar(x)], c("R", base_pkgs)))
+            }
+            direct <- parse_deps(desc[1, dep_fields])
+            if (!length(direct)) {
+              message("No package dependencies to install.")
+              quit(save = "no")
+            }
+            available <- available.packages(repos = repos)
+            recursive <- tools::package_dependencies(
+              direct,
+              db = available,
+              which = c("Depends", "Imports", "LinkingTo"),
+              recursive = TRUE
+            )
+            to_install <- sort(unique(c(direct, unlist(recursive, use.names = FALSE))))
+            message("Installing dependencies: ", paste(to_install, collapse = ", "))
+            install.packages(to_install, repos = repos, dependencies = FALSE)
+          '
 
       - name: Build Binary Package
         shell: bash
         run: |
-          R CMD INSTALL --build ${PACKAGE_NAME}.tar.gz
+          R CMD INSTALL --build ${SOURCE_BASENAME}.tar.gz
 
       - name: Upload Binary R Package
         id: upload
         uses: actions/upload-artifact@v6
         with:
-          name: artifact
+          name: ${{ env.SOURCE_BASENAME }}-${{ inputs.os }}-binary
           path: |
-            ${{ env.PACKAGE_NAME }}*.tgz
-            ${{ env.PACKAGE_NAME }}*.zip
+            ${{ env.SOURCE_BASENAME }}*.tgz
+            ${{ env.SOURCE_BASENAME }}*.zip
           retention-days: 1
