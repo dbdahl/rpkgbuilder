@@ -76,7 +76,7 @@ jobs:
             parse_deps <- function(fields) {
               if (!length(fields)) return(character())
               x <- trimws(unlist(strsplit(paste(fields, collapse = ","), ",")))
-              x <- sub("\\s*\\(.*\\)$", "", x)
+              x <- trimws(sub("[(].*$", "", x))
               unique(setdiff(x[nzchar(x)], c("R", base_pkgs)))
             }
             direct <- parse_deps(desc[1, dep_fields])
