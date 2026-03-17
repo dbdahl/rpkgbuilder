@@ -3,12 +3,13 @@
 set script_name (basename (status --current-filename))
 
 if test (count $argv) -lt 1 -o (count $argv) -gt 2
-    echo "usage: $script_name R_PACKAGE [none|windows|macOS|both]" >&2
+    echo "usage: $script_name PACKAGE_FILE [none|windows|macOS|both]" >&2
     exit 1
 end
 
 set pkg_filename (realpath $argv[1])
 set target none
+set package_kind ""
 
 if test (count $argv) -eq 2
     set target $argv[2]
@@ -24,11 +25,17 @@ switch $target
 end
 
 set pkg_basename (basename $pkg_filename)
-if not string match -rq '\.tar\.gz$' -- $pkg_basename
-    echo "expected an R source tarball ending in .tar.gz: $pkg_basename" >&2
+set source_basename ""
+
+if string match -rq '\.tar\.gz$' -- $pkg_basename
+    set package_kind source
+    set source_basename (string replace -r '\.tar\.gz$' '' -- $pkg_basename)
+else if string match -rq '\.(zip|tgz)$' -- $pkg_basename
+    set package_kind binary
+else
+    echo "expected an R package file ending in .tar.gz, .tgz, or .zip: $pkg_basename" >&2
     exit 1
 end
-set source_basename (string replace -r '\.tar\.gz$' '' -- $pkg_basename)
 
 cd (dirname (realpath (status --current-filename))); or exit $status
 
@@ -41,6 +48,11 @@ rsync -av --delete index.html src bin dahl.byu.edu:docs/devel/website-profession
 
 if test $target = none
     exit 0
+end
+
+if test $package_kind != source
+    echo "GitHub Actions dispatch is only supported for source tarballs (.tar.gz)" >&2
+    exit 1
 end
 
 type -q gh
