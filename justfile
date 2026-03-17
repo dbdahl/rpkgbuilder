@@ -8,15 +8,11 @@ deploy:
     mv README.html index.html
     rsync -av --delete index.html src bin dahl.byu.edu:docs/devel/website-professional/html/rpkgbuilder/
 
-windows: (_binaries "bin/windows/contrib/*/PACKAGES")
-
-macos: (_binaries "bin/macosx/big-sur-arm64/contrib/*/PACKAGES")
-
-remove-r-version r_version:
+remove-r-version r_version: && _deploy-reminder
     rm -rf bin/windows/contrib/{{r_version}}
     rm -rf bin/macosx/big-sur-arm64/contrib/{{r_version}}
 
-remove package:
+remove package: && _deploy-reminder
     rm -f src/contrib/{{package}}_*.tar.gz
     rm -f bin/windows/contrib/*/{{package}}_*.zip
     rm -f bin/macosx/big-sur-arm64/contrib/*/{{package}}_*.tgz
@@ -38,6 +34,10 @@ sources:
       quote = FALSE
     )
 
+windows: (_binaries "bin/windows/contrib/*/PACKAGES")
+
+macos: (_binaries "bin/macosx/big-sur-arm64/contrib/*/PACKAGES")
+
 _binaries glob:
     #!/usr/bin/env Rscript
     paths <- Sys.glob("{{glob}}")
@@ -57,3 +57,6 @@ _binaries glob:
     out <- do.call(rbind, rows)
     o <- order(out$R, out$Package)
     write.table(out[o, , drop = FALSE], row.names = FALSE, col.names = TRUE, quote = FALSE)
+
+_deploy-reminder:
+    @printf '\nLocal repo updated.\nRun `just deploy` to push the changes to the server.\n\n'
