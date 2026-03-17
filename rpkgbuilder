@@ -39,12 +39,15 @@ end
 
 cd (dirname (realpath (status --current-filename))); or exit $status
 
-marky --theme sakura-dark README.md; or exit $status
-mv README.html index.html; or exit $status
+type -q just
+or begin
+    echo "just is required to deploy the repository" >&2
+    exit 1
+end
 
 Rscript -e 'drat::insertPackage("'$pkg_filename'", repodir=".", action="archive")'; or exit $status
 
-rsync -av --delete index.html src bin dahl.byu.edu:docs/devel/website-professional/html/rpkgbuilder/; or exit $status
+just deploy; or exit $status
 
 if test $target = none
     exit 0

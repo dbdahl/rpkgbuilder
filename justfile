@@ -1,9 +1,20 @@
 list:
     @gh run list -R dbdahl/rpkgbuilder --workflow build-r-binaries.yml --limit 10
 
+deploy:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    marky --theme sakura-dark README.md
+    mv README.html index.html
+    rsync -av --delete index.html src bin dahl.byu.edu:docs/devel/website-professional/html/rpkgbuilder/
+
 windows: (_binaries "bin/windows/contrib/*/PACKAGES")
 
 macos: (_binaries "bin/macosx/big-sur-arm64/contrib/*/PACKAGES")
+
+remove-r-version r_version:
+    rm -rf bin/windows/contrib/{{r_version}}
+    rm -rf bin/macosx/big-sur-arm64/contrib/{{r_version}}
 
 remove package:
     rm -f src/contrib/{{package}}_*.tar.gz
@@ -46,4 +57,3 @@ _binaries glob:
     out <- do.call(rbind, rows)
     o <- order(out$R, out$Package)
     write.table(out[o, , drop = FALSE], row.names = FALSE, col.names = TRUE, quote = FALSE)
-
