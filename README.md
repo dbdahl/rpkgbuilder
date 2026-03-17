@@ -51,8 +51,8 @@ If the file does not already exist, `file.edit()` will create it. Then add:
 ```r
 options(
   repos = c(
-    dahl_personal = "https://dahl.byu.edu/r",
-    dahl_universe = "https://dbdahl.r-universe.dev",
+    dahl = "https://dahl.byu.edu/r",
+    dbdahl = "https://dbdahl.r-universe.dev",
     CRAN = "https://cloud.r-project.org"
   )
 )

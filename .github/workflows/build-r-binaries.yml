@@ -118,6 +118,7 @@ jobs:
           fi
 
       - name: Install Dependencies
+        if: runner.os != 'Windows'
         shell: bash
         run: |
           if [ -z "${DIRECT_DEPS:-}" ]; then
@@ -134,6 +135,29 @@ jobs:
                     paste(deps, collapse = ", "))
             install.packages(deps, repos = repos, dependencies = NA)
           '
+
+      - name: Install Dependencies (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:DIRECT_DEPS)) {
+            exit 0
+          }
+
+          $scriptPath = Join-Path $env:RUNNER_TEMP 'install-deps.R'
+          @'
+          repos <- c(
+            dahl = "https://dahl.byu.edu/r",
+            dbdahl = "https://dbdahl.r-universe.dev",
+            CRAN = "https://cloud.r-project.org"
+          )
+          deps <- strsplit(Sys.getenv("DIRECT_DEPS"), ",", fixed = TRUE)[[1]]
+          message("Installing direct dependencies with recursive strong deps: ",
+                  paste(deps, collapse = ", "))
+          install.packages(deps, repos = repos, dependencies = NA)
+          '@ | Set-Content -Path $scriptPath -Encoding UTF8
+
+          Rscript $scriptPath
 
       - name: Build Binary Package
         shell: bash
