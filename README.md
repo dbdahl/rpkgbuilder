@@ -6,9 +6,9 @@ This is a CRAN-like repository for R packages maintained by
 [David B. Dahl](https://dahl.byu.edu)
 ([Brigham Young University](https://www.byu.edu)).
 
-It often contains development versions of packages before they are widely
-available on [CRAN](https://cran.r-project.org) or
-[R-universe](https://r-universe.dev).
+It often contains development versions of packages before they are
+widely available on [R-universe](https://dbdahl.r-universe.dev) or
+[CRAN](https://cran.r-project.org) or
 
 ## Install a Package
 
