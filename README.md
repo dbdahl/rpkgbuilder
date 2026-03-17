@@ -7,20 +7,20 @@ This is a CRAN-style repository for R packages by
 ([Brigham Young University](https://www.byu.edu)) and collaborators.
 
 This often contains development versions of packages that are not yet widely
-distributed on, say, [CRAN](https://cran.r-project.org).
+distributed on, say, [CRAN](https://cran.r-project.org) or [R-universe](https://r-universe.dev).
 
 ## Package Installation
 
-To install the latest version of a particular package 'salso', run the following
+To install the latest version of a particular package, e.g. 'salso', run the following
 in R:
 
 ```R
-install.packages("salso", repos="https://dahl.byu.edu/r")
+install.packages("salso", repos=c("https://dahl.byu.edu/r", "https://dbdahl.r-universe.dev", "https://cloud.r-project.org"))
 ```
 
 ## Check Package Version
 
-To check the version of a particular package (e.g., the 'salso' package) that
+To check the version of a particular package (e.g., 'salso') that
 you have installed, run the following in R:
 
 ```R
@@ -40,8 +40,13 @@ file.edit("~/.Rprofile")
 Add the following line to your `.Rprofile` file:
 
 ```R
-options(repos=c(dahl="https://dahl.byu.edu/r",
-                CRAN="https://cloud.r-project.org"))
+options(
+  repos = c(
+    dahl1 = "https://dahl.byu.edu/r",
+    dahl2 = "https://dbdahl.r-universe.dev",
+    CRAN = "https://cloud.r-project.org"
+  )
+)
 ```
 
 Save your changes to your `.Rprofile` file and they will take effect for new R
