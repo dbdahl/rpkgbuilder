@@ -1,58 +1,68 @@
-# CRAN-Style Repository for R Package
+# CRAN-Style Repository for R Packages
 
 #### By David B. Dahl
 
-This is a CRAN-style repository for R packages by
+This is a CRAN-like repository for R packages maintained by
 [David B. Dahl](https://dahl.byu.edu)
-([Brigham Young University](https://www.byu.edu)) and collaborators.
+([Brigham Young University](https://www.byu.edu)).
 
-This often contains development versions of packages that are not yet widely
-distributed on, say, [CRAN](https://cran.r-project.org) or [R-universe](https://r-universe.dev).
+It often contains development versions of packages before they are widely
+available on [CRAN](https://cran.r-project.org) or
+[R-universe](https://r-universe.dev).
 
-## Package Installation
+## Install a Package
 
-To install the latest version of a particular package, e.g. 'salso', run the following
-in R:
+To install the latest version of a package, for example `salso`, run this in
+R:
 
-```R
-install.packages("salso", repos=c("https://dahl.byu.edu/r", "https://dbdahl.r-universe.dev", "https://cloud.r-project.org"))
+```r
+install.packages(
+  "salso",
+  repos = c(
+    "https://dahl.byu.edu/r",
+    "https://dbdahl.r-universe.dev",
+    "https://cloud.r-project.org"
+  )
+)
 ```
 
-## Check Package Version
+## Check an Installed Version
 
-To check the version of a particular package (e.g., 'salso') that
-you have installed, run the following in R:
+To check which version of `salso` is installed, run:
 
-```R
-packageVersion("salso") 
+```r
+packageVersion("salso")
 ```
 
-## Avoiding the Need to Specify the `repos` Argument
+## Set These Repositories as Defaults
 
-To avoid the need to specify the `repos` argument, you can automatically add
-this repository when R starts up. Edit your `.Rprofile` in your favorite text
-edit or run in R:
+To avoid specifying the `repos` argument each time, add these repositories to
+your user startup file. R looks for `.Rprofile` in the current directory first
+and then in your home directory. If you want these settings to apply across
+projects, edit the `.Rprofile` in your home directory. In R, open `~/.Rprofile`
+for editing:
 
-```R
+```r
 file.edit("~/.Rprofile")
 ```
 
-Add the following line to your `.Rprofile` file:
+If the file does not already exist, `file.edit()` will create it. Then add:
 
-```R
+```r
 options(
   repos = c(
-    dahl1 = "https://dahl.byu.edu/r",
-    dahl2 = "https://dbdahl.r-universe.dev",
+    dahl_personal = "https://dahl.byu.edu/r",
+    dahl_universe = "https://dbdahl.r-universe.dev",
     CRAN = "https://cloud.r-project.org"
   )
 )
 ```
 
-Save your changes to your `.Rprofile` file and they will take effect for new R
-sessions.  Then you can now simply run, e.g.:
+If you already customize `options("repos")`, merge these entries into your
+existing setting instead of replacing it.
 
-```R
+These settings take effect in new R sessions. After that, you can simply run:
+
+```r
 install.packages("salso")
 ```
-
