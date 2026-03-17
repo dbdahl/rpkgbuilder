@@ -1,4 +1,4 @@
-list:
+actions:
     @gh run list -R dbdahl/rpkgbuilder --workflow build-r-binaries.yml --limit 10
 
 deploy:
