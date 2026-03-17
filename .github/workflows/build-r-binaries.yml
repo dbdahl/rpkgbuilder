@@ -1,4 +1,5 @@
 name: Build Binary R Package
+run-name: ${{ inputs.source_basename }} on ${{ inputs.os }}
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -175,11 +176,13 @@ jobs:
             exit 1
           fi
           echo "BINARY_FILE=${files[0]}" >> $GITHUB_ENV
+          echo "BINARY_NAME=$(basename "${files[0]}")" >> $GITHUB_ENV
 
       - name: Upload Binary R Package
         id: upload
         uses: actions/upload-artifact@v7
         with:
+          name: ${{ env.BINARY_NAME }}
           path: ${{ env.BINARY_FILE }}
           archive: false
           retention-days: 1
