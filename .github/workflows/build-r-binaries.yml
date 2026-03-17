@@ -53,38 +53,86 @@ jobs:
       - name: Set Up R Environment
         uses: r-lib/actions/setup-r@v2
 
-      - name: Install Dependencies from DESCRIPTION
+      - name: Extract Dependencies from DESCRIPTION
         shell: bash
         run: |
+          desc_path="$(tar -tzf "${SOURCE_BASENAME}.tar.gz" | awk '/\/DESCRIPTION$/ { print; exit }')"
+          if [ -z "$desc_path" ]; then
+            echo "Could not locate DESCRIPTION in ${SOURCE_BASENAME}.tar.gz" >&2
+            exit 1
+          fi
+
+          deps="$(
+            tar -xOf "${SOURCE_BASENAME}.tar.gz" "$desc_path" |
+              awk '
+                BEGIN {
+                  capture = 0
+                  line = ""
+                }
+                /^(Depends|Imports|LinkingTo):/ {
+                  capture = 1
+                  sub(/^[^:]+:[[:space:]]*/, "", $0)
+                  line = line "," $0
+                  next
+                }
+                capture && /^[[:space:]]/ {
+                  sub(/^[[:space:]]+/, "", $0)
+                  line = line "," $0
+                  next
+                }
+                {
+                  capture = 0
+                }
+                END {
+                  print line
+                }
+              ' |
+              tr ',' '\n' |
+              sed -E 's/[[:space:]]*\(.*$//' |
+              sed -E 's/^[[:space:]]+|[[:space:]]+$//g' |
+              awk '
+                BEGIN {
+                  split("R base compiler datasets graphics grDevices grid methods parallel splines stats stats4 tcltk tools utils boot class cluster codetools foreign KernSmooth lattice MASS Matrix mgcv nlme nnet rpart spatial survival", skip, " ")
+                  for (i in skip) excluded[skip[i]] = 1
+                }
+                NF && !($0 in excluded) {
+                  keep[$0] = 1
+                }
+                END {
+                  first = 1
+                  for (pkg in keep) {
+                    if (!first) printf ","
+                    printf "%s", pkg
+                    first = 0
+                  }
+                  printf "\n"
+                }
+              '
+          )"
+
+          echo "DIRECT_DEPS=$deps" >> "$GITHUB_ENV"
+          if [ -n "$deps" ]; then
+            echo "DIRECT_DEPS: $deps"
+          else
+            echo "No package dependencies to install."
+          fi
+
+      - name: Install Dependencies
+        shell: bash
+        run: |
+          if [ -z "${DIRECT_DEPS:-}" ]; then
+            exit 0
+          fi
           Rscript -e '
             repos <- c(
               dahl = "https://dahl.byu.edu/r",
               dbdahl = "https://dbdahl.r-universe.dev",
               CRAN = "https://cloud.r-project.org"
             )
-            source_tarball <- paste0(Sys.getenv("SOURCE_BASENAME"), ".tar.gz")
-            unpack_dir <- tempfile("pkgsrc-")
-            dir.create(unpack_dir)
-            utils::untar(source_tarball, exdir = unpack_dir)
-            pkg_dirs <- list.dirs(unpack_dir, full.names = TRUE, recursive = FALSE)
-            stopifnot(length(pkg_dirs) == 1)
-            desc <- read.dcf(file.path(pkg_dirs, "DESCRIPTION"))
-            dep_fields <- intersect(c("Depends", "Imports", "LinkingTo"), colnames(desc))
-            base_pkgs <- rownames(installed.packages(priority = c("base", "recommended")))
-            parse_deps <- function(fields) {
-              if (!length(fields)) return(character())
-              x <- trimws(unlist(strsplit(paste(fields, collapse = ","), ",")))
-              x <- trimws(sub("[(].*$", "", x))
-              unique(setdiff(x[nzchar(x)], c("R", base_pkgs)))
-            }
-            direct <- parse_deps(desc[1, dep_fields])
-            if (!length(direct)) {
-              message("No package dependencies to install.")
-              quit(save = "no")
-            }
+            deps <- strsplit(Sys.getenv("DIRECT_DEPS"), ",", fixed = TRUE)[[1]]
             message("Installing direct dependencies with recursive strong deps: ",
-                    paste(sort(direct), collapse = ", "))
-            install.packages(direct, repos = repos, dependencies = NA)
+                    paste(deps, collapse = ", "))
+            install.packages(deps, repos = repos, dependencies = NA)
           '
 
       - name: Build Binary Package
